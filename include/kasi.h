@@ -59,7 +59,8 @@ namespace std
         }
     };
 }
-
+void printMemoryUsage();
+void printheapmemory();
 // 恢复图
 struct Rec_Graph
 {
@@ -160,13 +161,20 @@ inline void free_rec_graph(rec_graph *rg, int NSIZE)
     free(rg->remdegree);
     free(rg->treevertexdegree);
     rg->treevertex.clear();
+    rg->treevertex.shrink_to_fit();
     for (int i = 0; i < NSIZE; ++i)
     {
         rg->treeedge[i].clear();
+        rg->treeedge[i].shrink_to_fit();
         rg->treedge_twin_1[i].clear();
+        rg->treedge_twin_1[i].shrink_to_fit();
         rg->treedge_twin_2[i].clear();
+        rg->treedge_twin_2[i].shrink_to_fit();
         rg->edge[i].clear();
+        rg->edge[i].shrink_to_fit();
     }
+    rg->edge.clear();
+    rg->edge.shrink_to_fit();
 }
 
 inline void free_rec_graph(hash_graph *rg, int NSIZE)
@@ -175,13 +183,20 @@ inline void free_rec_graph(hash_graph *rg, int NSIZE)
     free(rg->remdegree);
     free(rg->treevertexdegree);
     rg->treevertex.clear();
+    rg->treevertex.shrink_to_fit();
     for (int i = 0; i < NSIZE; ++i)
     {
         rg->treeedge[i].clear();
+        rg->treeedge[i].shrink_to_fit();
         rg->treedge_twin_1[i].clear();
+        rg->treedge_twin_1[i].shrink_to_fit();
         rg->treedge_twin_2[i].clear();
-        rg->edge[i].clear();
+        rg->treedge_twin_2[i].shrink_to_fit();
+        unordered_set<Edge> emptyedgelist;
+        rg->edge[i].swap(emptyedgelist);
     }
+    rg->edge.clear();
+    rg->edge.shrink_to_fit();
 }
 
 inline void free_rec_graph(tree_graph *rg, int NSIZE)
@@ -190,13 +205,20 @@ inline void free_rec_graph(tree_graph *rg, int NSIZE)
     free(rg->remdegree);
     free(rg->treevertexdegree);
     rg->treevertex.clear();
+    rg->treevertex.shrink_to_fit();
     for (int i = 0; i < NSIZE; ++i)
     {
         rg->treeedge[i].clear();
+        rg->treeedge[i].shrink_to_fit();
         rg->treedge_twin_1[i].clear();
+        rg->treedge_twin_1[i].shrink_to_fit();
         rg->treedge_twin_2[i].clear();
-        rg->edge[i].clear();
+        rg->treedge_twin_2[i].shrink_to_fit();
+        set<Edge> emptyedgelist;
+        rg->edge[i].swap(emptyedgelist);
     }
+    rg->edge.clear();
+    rg->edge.shrink_to_fit();
 }
 inline void remove_element(vector<Edge> &vec, int element)
 {
@@ -228,12 +250,12 @@ inline void basic_remove_neighborhood(int u, vector<Edge> &edge, int *remdegree,
         i++;
     }
     remdegree[u] = 0;
+#ifdef FREE
     edge.clear();
+#endif
 }
 
 // 对于pair进行hash似乎不可行（输入一个pair，返回一个hash值）
-
-// 重新构造原始图   前面的边数和后面的边数不一样？？？？？？？
 inline void reduce_the_graph(graph *og, rec_graph *rg)
 {
     // 修改og,首先记录存在的顶点的数量
@@ -296,7 +318,6 @@ inline void reduce_the_graph(graph *og, rec_graph *rg)
     og->m = neighbor_num;
 }
 // 记录匹配信息
-// 用一个向量记录被移除的顶点，用一个邻接标记录边信息
 inline void augment_recover_graph(Edge e, rec_graph *rg)
 {
     int original_a, original_b;
@@ -354,9 +375,6 @@ inline void augment_recover_graph(Edge e, tree_graph *rg)
     rg->treeedge[original_a].push_back(original_b);
 }
 
-// 记录边之间的对应关系，通过顶点来记录的话，不能够确定数组大小，不同的对应边组可能会共顶点，举例：连接组件，多个连接组件共同一个端点等
-// 直接通过两个边数组来记录？只需要一个边数组，每条边记录相互的位置即可。在记录匹配信息的时候即可同时完成。时间消耗为nlogn
-// 使用边数组记录对应信息的时候，需要记录每条边的起始顶点和终止顶点，不是简单的csr格式
 inline void add_twins(Edge e1, Edge e2, rec_graph *rg)
 {
     int oe11 = e1.original_start;

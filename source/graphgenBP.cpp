@@ -18,8 +18,8 @@ void free_graph(graph *bGraph)
 {
     delete[] bGraph->vtx_pointer;
     delete[] bGraph->endV;
-    // if (bGraph->weight)
-    //     delete[] bGraph->weight;
+    if (bGraph->weight)
+        delete[] bGraph->weight;
 
     free(bGraph);
 }

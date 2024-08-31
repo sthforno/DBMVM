@@ -8,10 +8,9 @@
             "name": "(gdb) 启动",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/wuguang/ms-bfs-graft/msBFSGraft",
+            "program": "/home/wuguang/DBMVM/main",
             "args": [
-                "com-LiveJournal.mtx",
-                // "worstforGMVM.txt",
+                "~/bipartite/data/unperfect/com-LiveJournal.mtx",
                 "1"
             ],
             "stopAtEntry": false,

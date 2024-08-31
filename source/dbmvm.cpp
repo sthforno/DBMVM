@@ -434,10 +434,8 @@ void DBMVM(graph *og, dynamic_graph *dg, match_tree *mt, int times)
     // // of << merge_operations << "    ";
     // of << elapsed_seconds_dbmvm.count() << "    " << deg1count << "    " << deg2count << endl;
     // of.close();
-    // // 精确算法
-    // // 对于度数为1的顶点，直接设置相关的边的顶点的度数为0表示删除，并且更新相关顶点的度数没有实际更新边表。
-    // 对于度数为2的顶点，修改其中一个顶点的连接状态，删除另外两个顶点。
-    // 度数为0的顶点表示被删除
+
+    // printheapmemory();
 
     free(mergearray);
     free(row_que);
@@ -448,6 +446,7 @@ void DBMVM(graph *og, dynamic_graph *dg, match_tree *mt, int times)
     free(visited);
     free(stack_edge_id);
     free(stack_vtx_neigh);
+    free(rnd);
 }
 
 // 处理之后的每一个列顶点

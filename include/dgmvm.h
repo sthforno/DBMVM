@@ -4,14 +4,6 @@
 #include <fstream>
 
 #include "kasi.h"
-// 创新点一：结合间隙与连接的方法，保证插入效率的同时保证时间复杂度，是否可以单纯使用连接的方法？？？？？
-// 创新点二：根据算法特点，限制间隙的大小从而保证空间复杂度
-// 创新点三：单次插入和批量插入优化
-// 潜在创新点：每次插边应该插入两个边，现有基于连接的方法没有考察插入和遍历频繁交替的情况。
-
-// 动态图存储结构    间隙加上链接的方法
-
-// 问题：一个度数为一的顶点v与一个度数很高的顶点u相连，u一开始的度数不高，后续不断增加。
 
 struct dynamic_graph
 {
@@ -47,6 +39,7 @@ struct match_tree
 };
 void DGMVM(graph *og, dynamic_graph *dg, match_tree *mt, int times);
 void DBMVM(graph *og, dynamic_graph *dg, match_tree *mt, int times);
+void printMemoryUsage();
 inline void init_dynamic_graph(graph *og, dynamic_graph *dg, stack<int> &bucket1, stack<int> &bucket2, int times) // 如果在h文件中实现，一定要加上inline
 {
     dg->n = og->n;
@@ -128,29 +121,6 @@ inline void delet_vertex(int v, dynamic_graph *dg)
         dg->vtx_ptr_end[iter_vtx] = dg->vtx_ptr_start[iter_vtx]; // 重置新的迭代顶点的访问范围
     }
 }
-// 只有在插入边的时候可能需要平衡整个数据结构,
-// 每次插入边要在两个位置插入边
-// 四种情况 1）ab都存在空隙 2）a存在空隙 3)b存在空隙 4）ab都不存在空隙。
-// 插边的优化策略是否需要同时考虑这两个位置？？？？？？？？？？？？？？？？？？？？？？？？
-
-// 将ab边改为cb边
-// 传入ab边的edge_id，传入a，b，c三个顶点
-// bug 1 插边没有更新度数
-// bug 2 第一次连接到新的表时，该表应该是空的，直接往里存东西的话，会记录重复的边
-// bug 3 错误使用变量名，导致没有正确更新边表的末尾
-// bug 4 优先处理度数为一的顶点，将while改为if
-// bug 5 没有确定边界条件，边表最后一个位置是否以及连接了
-// bug 6 错误使用变量，导致移除了特定的边
-// bug 7 混淆了指针，边表最后一个元素存储的是顶点而不是顶点指向的边表
-// bug 8 边界设置有问题，表示连接到边表，该值应该大于最大的边表元素，dg->m  ---> 2*dg->m
-// bug 9 存在长边表被合并移除的情况，此时它自己无法存储他自己。
-// bug 10 直接连接的话，边表中可能会记录重复的元素
-// bug 11 将边表中当前元素与最后一个元素互换之后，没有处理最后一个元素
-// bug 12 把当前顶点需要记录的信息先记录下来再移除
-// bug 13 表现，将间隙由大于等于改为大于后，添加了连接的概率，增加匹配基数。 ?????????
-// bug 14 边界条件问题，边表可能只存在一个元素，移除该元素之后，边表指针指到前面一个边表去了
-// bug 15 改变遍历方法之后，之前的跳出循环的方法可能不能够再跳出循环
-// bug 16 使用memcpy出错的原因，变量的类型不一样，比如int和long
 
 // 将vtx_a与顶点栈中的连边全部转换为vtx_c与其相连
 inline void insert_edgelist_to_dynamic_graph(int vtx_a, int *stack_vtx, int *stack_edge_id, int stack_end, int vtx_c, dynamic_graph *dg)
@@ -607,18 +577,4 @@ inline void reduce_the_dynamic_graph(graph *og, dynamic_graph *dg, match_tree *m
     og->m = num_of_edge;
 }
 
-// 移除顶点后要重置end指针以及该边表中的所有元素!!!!!!!!!!!!!!!!
-
-// 合并边操作分为以下几个步骤
-// 1）插入边 将被移除邻居顶点与其他顶点相关的边进行插入
-// 1.2  将ab边    变为cb边       在c顶点的边表中插入ab边     b顶点的边表中将原始的ab变为cb边。
-// 2）移除边  相关顶点与被移除的邻居顶点之间的边要移除
-// 3）移除顶点 移除可合并顶点以及其中一个邻居顶点
-// 4)
-
-// 数据结构组织区别
-// 使用两个数组记录顶点索引和使用一个数组记录顶点索引 ？？ 边的起始位置和终止位置
-// 使用结构体插入和使用三个数组插入的效率？ 边的终止顶点和原始起点和原始终点
-
-// 为什么要记录边的原始起点和终点？？？？？ 构建匹配树的时候需要，匹配的时候要恢复原始的匹配
 #endif
