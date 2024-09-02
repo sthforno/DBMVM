@@ -250,9 +250,7 @@ inline void basic_remove_neighborhood(int u, vector<Edge> &edge, int *remdegree,
         i++;
     }
     remdegree[u] = 0;
-#ifdef FREE
     edge.clear();
-#endif
 }
 
 // 对于pair进行hash似乎不可行（输入一个pair，返回一个hash值）

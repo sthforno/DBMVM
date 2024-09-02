@@ -76,9 +76,7 @@ void KS2basic(graph *og, rec_graph *rg)
                 // 是被合并边，原始端点不一定被移除了。
                 rg->remdegree[v] = 0;
                 basic_remove_neighborhood(u, rg->edge[u], rg->remdegree, bucket1, bucket2);
-#ifdef FREE
                 rg->edge[v].clear();
-#endif
             }
         }
 
@@ -156,10 +154,8 @@ void KS2basic(graph *og, rec_graph *rg)
                 rg->remdegree[w] = 0;
                 deg2count++;
                 reduce_degree(u, rg->remdegree, bucket1, bucket2);
-#ifdef FREE
                 rg->edge[v].clear();
                 rg->edge[w].clear();
-#endif
             }
         }
     }
