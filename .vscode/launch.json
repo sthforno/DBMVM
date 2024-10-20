@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "/home/wuguang/DBMVM/main",
             "args": [
-                "~/bipartite/data/unperfect/com-LiveJournal.mtx",
+                "~/bipartite/data/unperfect/wb-edu.mtx", //worstcaseforcachekasi/kasiworstforcache_a.txt  unperfect/ljournal-2008.mtx
                 "1"
             ],
             "stopAtEntry": false,

@@ -54,7 +54,8 @@
         "typeinfo": "cpp",
         "cstring": "cpp",
         "iomanip": "cpp",
-        "cinttypes": "cpp"
+        "cinttypes": "cpp",
+        "stack": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }
