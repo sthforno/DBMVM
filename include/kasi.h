@@ -126,6 +126,7 @@ struct tree_graph
 void KaSi_tree(graph *og, tree_graph *tg);
 
 void KS2basic(graph *G, rec_graph *rg);
+void Cache_KaSi(graph *og, rec_graph *rg);
 void Comp_kaSi(graph *og, rec_graph *rg);
 void GMVM(graph *og, rec_graph *rg);
 void BMVM(graph *og, rec_graph *rg);

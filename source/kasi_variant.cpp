@@ -7,6 +7,7 @@
 #include <set>
 #include <fstream>
 #include <cstring>
+#include <algorithm>
 #include "../include/kasi.h"
 #include "../include/graphgenBP.h"
 
@@ -169,8 +170,8 @@ void KS2basic(graph *og, rec_graph *rg)
             num_of_vtx++;
         }
     }
-    // cout << "剩下的顶点数量为" << num_of_vtx << endl;
-    // cout << "获取的匹配基数为" << deg1count + deg2count << endl;
+    cout << "剩下的顶点数量为" << num_of_vtx << endl;
+    cout << "获取的匹配基数为" << deg1count + deg2count << endl;
 
     // 记录顶点数，剩余顶点数，合并次数
     // ofstream of;
@@ -179,14 +180,78 @@ void KS2basic(graph *og, rec_graph *rg)
     // of << merge_operations << "  ";
     // of.close();
     // printMemoryUsage();
-    printheapmemory();
+    // printheapmemory();
     free(mergearray);
 }
 
-void Comp_kaSi(graph *og, rec_graph *rg)
+#define CACHE_SIZE 5
+struct cache_vertices
+{
+    std::vector<std::unordered_set<int>> high_degree_vertices_cache;
+    std::vector<int> high_degree_vertices_cache_id;
+    bool is_high_degree_vertices_cache_empty = true;
+};
+
+void Cache_high_degree_vertices(graph *og, rec_graph *rg, cache_vertices *ca, int v, int *frequency)
+{
+    if (ca->is_high_degree_vertices_cache_empty = true)
+    {
+        for (int i = 0; i < CACHE_SIZE; i++)
+        {
+            if (ca->high_degree_vertices_cache_id[i] == -1)
+            {
+                ca->high_degree_vertices_cache_id[i] = v;
+                ca->high_degree_vertices_cache[i].clear();
+                for (int j = 0; j < rg->edge[v].size(); j++)
+                {
+                    if (rg->remdegree[rg->edge[v][j].endpoint] > 0)
+                        ca->high_degree_vertices_cache[i].insert(rg->edge[v][j].endpoint);
+                }
+                break;
+            }
+            if (i == CACHE_SIZE - 1)
+            {
+                ca->is_high_degree_vertices_cache_empty = false;
+            }
+        }
+    }
+    else // 从cache中移除数据需要更新边表
+    {
+        for (int i = 0; i < CACHE_SIZE; i++)
+        {
+            if (frequency[ca->high_degree_vertices_cache_id[i]] < frequency[v])
+            {
+                ca->high_degree_vertices_cache_id[i] = v;
+                ca->high_degree_vertices_cache[i].clear();
+                for (int j = 0; j < rg->edge[v].size(); j++)
+                {
+                    if (rg->remdegree[rg->edge[v][j].endpoint] > 0)
+                        ca->high_degree_vertices_cache[i].insert(rg->edge[v][j].endpoint);
+                }
+                break;
+            }
+        }
+    }
+}
+
+int in_cache(int v, cache_vertices *ca)
+{
+    int i;
+    for (i = 0; i < CACHE_SIZE; i++)
+    {
+        if (ca->high_degree_vertices_cache_id[i] == v)
+        {
+            return i;
+        }
+    }
+    return CACHE_SIZE;
+}
+
+// 只有在合并顶点时会反复访问高度顶点所有邻居
+void Cache_KaSi(graph *og, rec_graph *rg)
 {
 
-    int NSIZE = og->n; // 一侧顶点的数量
+    int NSIZE = og->n;
     int u, w, ufu, ufw, uf1, uf2;
     stack<int> bucket1;
     stack<int> bucket2;
@@ -199,6 +264,8 @@ void Comp_kaSi(graph *og, rec_graph *rg)
     int nnz = og->m; // 边数
     int next;
     int edges = nnz;
+
+    int degree_threshold = log(NSIZE);
 
     rg->remdegree = (int *)malloc((NSIZE) * sizeof(int));
     rg->matching = (int *)malloc(NSIZE * sizeof(int));
@@ -213,17 +280,22 @@ void Comp_kaSi(graph *og, rec_graph *rg)
 
     // 初始化匹配
     memset(rg->matching, -1, sizeof(int) * NSIZE);
-
-    int *mergearray = (int *)calloc(NSIZE, sizeof(int));
+    int *mergearray;
+    mergearray = (int *)calloc(NSIZE, sizeof(int));
     // printf("use merge array \n");
 
     init_bipartite(rg, bucket1, bucket2, og);
 
+    // cache频繁处理的高度顶点
+    cache_vertices ca;
+    ca.high_degree_vertices_cache.resize(CACHE_SIZE);
+    ca.high_degree_vertices_cache_id.resize(CACHE_SIZE);
+    ca.high_degree_vertices_cache_id.assign(CACHE_SIZE, -1);
+
+    int *vertices_frequency = (int *)malloc(sizeof(int) * NSIZE);
+    memset(vertices_frequency, 0, sizeof(int) * NSIZE);
+
     int merge_operations = 0;
-
-    int *comp_record = (int *)malloc(sizeof(int) * NSIZE);
-    memset(comp_record, -1, sizeof(int) * NSIZE);
-
     // 主循环，直到处理完所有的边? 并且度数一和度数二的桶都为空
     while (!bucket1.empty() || !bucket2.empty()) //
     {
@@ -254,7 +326,6 @@ void Comp_kaSi(graph *og, rec_graph *rg)
         if (!bucket2.empty())
         {
             int v = bucket2.top();
-            comp_record[v] = v;
             bucket2.pop();
             if (rg->remdegree[v] == 2)
             {
@@ -264,194 +335,130 @@ void Comp_kaSi(graph *og, rec_graph *rg)
                 while (!rg->remdegree[rg->edge[v][point].endpoint])
                     point++;
                 int u = rg->edge[v][point].endpoint;
-                comp_record[u] = v;
                 Edge e1 = rg->edge[v][point];
                 point++;
                 while (!rg->remdegree[rg->edge[v][point].endpoint])
                     point++;
                 int w = rg->edge[v][point].endpoint;
-                comp_record[w] = v;
                 Edge e2 = rg->edge[v][point];
 
+                // 将度数较大的设置为u
+                if (rg->remdegree[w] > rg->remdegree[u])
+                    swap2(u, w);
+
+                vertices_frequency[u]++;
+                vertices_frequency[w]++;
+                // 如果cache没满，直接找空插入
+                if (rg->remdegree[u] > degree_threshold)
+                {
+                    if (in_cache(u, &ca) == CACHE_SIZE)
+                        Cache_high_degree_vertices(og, rg, &ca, u, vertices_frequency);
+                }
+                if (rg->remdegree[w] > degree_threshold)
+                {
+                    if (in_cache(w, &ca) == CACHE_SIZE)
+                        Cache_high_degree_vertices(og, rg, &ca, w, vertices_frequency);
+                }
+
+                // // 构建recover图，用于恢复匹配
                 augment_recover_graph(e1, rg);
                 augment_recover_graph(e2, rg);
                 add_twins(e1, e2, rg);
 
-                // 寻找边界顶点
-                int temp_vtx, temp_vtx1;
-                while (rg->remdegree[u] == 2)
-                {
-                    // 获取u的另外一个邻居
-                    int ptr = 0;
-                    // 如果被处理过了，继续处理，如果度数为0，继续处理
-                    while ((!rg->remdegree[rg->edge[u][ptr].endpoint] || comp_record[rg->edge[u][ptr].endpoint] == v))
-                    {
-                        ptr++;
-                        if (ptr == rg->edge[u].size())
-                        {
-                            break;
-                        }
-                    }
-
-                    if (ptr == rg->edge[u].size())
-                    {
-                        break;
-                    }
-                    temp_vtx = rg->edge[u][ptr].endpoint;
-                    Edge e1 = rg->edge[u][ptr];
-                    comp_record[temp_vtx] = v;
-                    if (rg->remdegree[temp_vtx] != 2)
-                    {
-                        break;
-                    }
-
-                    // 判断u的另外一个邻居x的度数是否为2，为2继续进行查找，否则，直接以该顶点作为端点
-                    ptr = 0;
-                    while ((!rg->remdegree[rg->edge[temp_vtx][ptr].endpoint] || comp_record[rg->edge[temp_vtx][ptr].endpoint] == v))
-                    {
-                        ptr++;
-                        if (ptr == rg->edge[temp_vtx].size())
-                        {
-                            break;
-                        }
-                    }
-
-                    if (ptr == rg->edge[temp_vtx].size())
-                    {
-                        break;
-                    }
-
-                    temp_vtx1 = rg->edge[temp_vtx][ptr].endpoint;
-                    Edge e2 = rg->edge[temp_vtx][ptr];
-                    comp_record[temp_vtx1] = v;
-
-                    // 移除路径中间的两个顶点
-                    rg->remdegree[u] = 0;
-                    rg->remdegree[temp_vtx] = 0;
-
-                    augment_recover_graph(e1, rg);
-                    augment_recover_graph(e2, rg);
-                    add_twins(e1, e2, rg);
-
-                    // 更新顶点u
-                    u = temp_vtx1;
-                }
-
-                while (rg->remdegree[w] == 2)
-                {
-                    int ptr = 0;
-                    // 如果被处理过了，继续处理，如果度数为0，继续处理
-                    while ((!rg->remdegree[rg->edge[w][ptr].endpoint] || comp_record[rg->edge[w][ptr].endpoint] == v))
-                    {
-                        ptr++;
-                        if (ptr == rg->edge[w].size())
-                        {
-                            break;
-                        }
-                    }
-
-                    if (ptr == rg->edge[w].size())
-                    {
-                        break;
-                    }
-
-                    temp_vtx = rg->edge[w][ptr].endpoint;
-                    Edge e1 = rg->edge[w][ptr];
-                    comp_record[temp_vtx] = v;
-                    if (rg->remdegree[temp_vtx] != 2)
-                    {
-                        break;
-                    }
-
-                    // 判断u的另外一个邻居x的度数是否为2，为2继续进行查找，否则，直接以该顶点作为端点
-                    ptr = 0;
-                    while ((!rg->remdegree[rg->edge[temp_vtx][ptr].endpoint] || comp_record[rg->edge[temp_vtx][ptr].endpoint] == v))
-                    {
-                        ptr++;
-                        if (ptr == rg->edge[temp_vtx].size())
-                        {
-                            break;
-                        }
-                    }
-
-                    if (ptr == rg->edge[temp_vtx].size())
-                    {
-                        break;
-                    }
-
-                    temp_vtx1 = rg->edge[temp_vtx][ptr].endpoint;
-                    Edge e2 = rg->edge[temp_vtx][ptr];
-                    comp_record[temp_vtx1] = v;
-
-                    // 移除路径中间的两个顶点
-                    rg->remdegree[w] = 0;
-                    rg->remdegree[temp_vtx] = 0;
-
-                    augment_recover_graph(e1, rg);
-                    augment_recover_graph(e2, rg);
-                    add_twins(e1, e2, rg);
-
-                    // 更新顶点u
-                    w = temp_vtx1;
-                }
-
                 rg->remdegree[v] = 0; // 删除顶点v
 
                 // 处理顶点u，将存在的顶点进行记录，移除被删除的边
-                int i = 0;
-                int upper_limit = rg->edge[u].size() - 1;
-                for (int i = upper_limit; i >= 0; --i)
+                int position = in_cache(u, &ca);
+                if (position < CACHE_SIZE)
                 {
-                    if (rg->remdegree[rg->edge[u][i].endpoint])
+                    // 对于u中已经被移除的元素怎么处理？没法处理，只能够在每次遍历的时候加上判断语句是否度数为0
+                    // 处理顶点w
+                    rg->remdegree[w]--;
+                    int examined = 0;
+                    int i = 0;
+                    while (examined < rg->remdegree[w])
                     {
-                        mergearray[rg->edge[u][i].endpoint] = u;
-                    }
-                    else
-                        remove_element(rg->edge[u], i);
-                }
-
-                // 处理顶点w，对于w的邻居，如果是非并行边，将其进行两次插入（两个顶点）
-                // 如果是并行边，更新度数，并且判断是否需要重新处理
-                rg->remdegree[w]--;
-                int examined = 0;
-                i = 0;
-                while (examined < rg->remdegree[w])
-                {
-                    if (rg->remdegree[rg->edge[w][i].endpoint])
-                    {
-                        if (mergearray[rg->edge[w][i].endpoint] != u)
+                        if (rg->remdegree[rg->edge[w][i].endpoint])
                         {
-                            rg->edge[u].push_back(rg->edge[w][i]);
-                            tmpedge.endpoint = u;
-                            tmpedge.original_start = rg->edge[w][i].original_end;
-                            tmpedge.original_end = rg->edge[w][i].original_start;
-                            rg->edge[rg->edge[w][i].endpoint].push_back(tmpedge);
-                            rg->remdegree[u]++;
+                            // 如果在cache中能够找到元素
+                            if (ca.high_degree_vertices_cache[position].find(rg->edge[w][i].endpoint) != ca.high_degree_vertices_cache[position].end())
+                            {
+                                reduce_degree(rg->edge[w][i].endpoint, rg->remdegree, bucket1, bucket2);
+                            }
+                            else // 找不到元素，同时插入cache和原始的邻接表
+                            {
+                                ca.high_degree_vertices_cache[position].insert(rg->edge[w][i].endpoint);
+                                rg->edge[u].push_back(rg->edge[w][i]);
+                                tmpedge.endpoint = u;
+                                tmpedge.original_start = rg->edge[w][i].original_end;
+                                tmpedge.original_end = rg->edge[w][i].original_start;
+                                rg->edge[rg->edge[w][i].endpoint].push_back(tmpedge);
+                                rg->remdegree[u]++;
+                            }
+                            examined++;
+                        }
+                        i++;
+                    }
+
+                    // 最终结果，删除了w和v顶点
+                    rg->remdegree[w] = 0;
+                    deg2count++;
+                    reduce_degree(u, rg->remdegree, bucket1, bucket2);
+                    rg->edge[v].clear();
+                    rg->edge[w].clear();
+                }
+                else // 如果不在cache中，正常更新
+                {
+                    int upper_limit = rg->edge[u].size() - 1;
+                    for (int i = upper_limit; i >= 0; --i)
+                    {
+                        if (rg->remdegree[rg->edge[u][i].endpoint])
+                        {
+                            mergearray[rg->edge[u][i].endpoint] = u;
                         }
                         else
-                        {
-                            reduce_degree(rg->edge[w][i].endpoint, rg->remdegree, bucket1, bucket2);
-                        }
-                        examined++;
+                            remove_element(rg->edge[u], i);
                     }
-                    i++;
-                }
 
-                // 最终结果，删除了w和v顶点
-                rg->remdegree[w] = 0;
-                deg2count++;
-                reduce_degree(u, rg->remdegree, bucket1, bucket2);
-                rg->edge[v].clear();
-                rg->edge[w].clear();
+                    // 处理顶点w，对于w的邻居，如果是非并行边，将其进行两次插入（两个顶点）
+                    // 如果是并行边，更新度数，并且判断是否需要重新处理
+                    rg->remdegree[w]--;
+                    int examined = 0;
+                    int i = 0;
+                    while (examined < rg->remdegree[w])
+                    {
+                        if (rg->remdegree[rg->edge[w][i].endpoint])
+                        {
+                            if (mergearray[rg->edge[w][i].endpoint] != u)
+                            {
+                                rg->edge[u].push_back(rg->edge[w][i]);
+                                tmpedge.endpoint = u;
+                                tmpedge.original_start = rg->edge[w][i].original_end;
+                                tmpedge.original_end = rg->edge[w][i].original_start;
+                                rg->edge[rg->edge[w][i].endpoint].push_back(tmpedge);
+                                rg->remdegree[u]++;
+                            }
+                            else
+                            {
+                                reduce_degree(rg->edge[w][i].endpoint, rg->remdegree, bucket1, bucket2);
+                            }
+                            examined++;
+                        }
+                        i++;
+                    }
+
+                    // 最终结果，删除了w和v顶点
+                    rg->remdegree[w] = 0;
+                    deg2count++;
+                    reduce_degree(u, rg->remdegree, bucket1, bucket2);
+                    rg->edge[v].clear();
+                    rg->edge[w].clear();
+                }
             }
         }
     }
     auto end_kasi = std::chrono::system_clock::now();
 
-    // 精确算法
-    // 对于度数为1的顶点，直接设置相关的边的顶点的度数为0表示删除，并且更新相关顶点的度数没有实际更新边表。
-    // 对于度数为2的顶点，修改其中一个顶点的连接状态，删除另外两个顶点。        通过head记录被合并到的顶点
-    // 度数为0的顶点表示被删除
     int num_of_vtx = 0;
     for (int i = 0; i < og->n; i++)
     {
@@ -469,8 +476,10 @@ void Comp_kaSi(graph *og, rec_graph *rg)
     // // of << og->n << "    " << num_of_vtx << "    " << deg2count << "    ";
     // of << merge_operations << "  ";
     // of.close();
+    // printMemoryUsage();
+    printheapmemory();
     free(mergearray);
-    free(comp_record);
+    free(vertices_frequency);
 }
 
 //==================================================================================================================================================//
@@ -664,7 +673,7 @@ void KaSi_hash(graph *og, hash_graph *hg)
     }
 
     // printMemoryUsage();
-    printheapmemory();
+    // printheapmemory();
 
     // 精确算法
     // 对于度数为1的顶点，直接设置相关的边的顶点的度数为0表示删除，并且更新相关顶点的度数没有实际更新边表。
@@ -861,7 +870,7 @@ void KaSi_tree(graph *og, tree_graph *tg)
     }
 
     // printMemoryUsage();
-    printheapmemory();
+    // printheapmemory();
 
     // 精确算法
     // 对于度数为1的顶点，直接设置相关的边的顶点的度数为0表示删除，并且更新相关顶点的度数没有实际更新边表。

@@ -39,6 +39,7 @@ struct match_tree
 };
 void DGMVM(graph *og, dynamic_graph *dg, match_tree *mt, int times);
 void DBMVM(graph *og, dynamic_graph *dg, match_tree *mt, int times);
+void MVM_raw(graph *og, dynamic_graph *dg, match_tree *mt, int times);
 void printMemoryUsage();
 inline void init_dynamic_graph(graph *og, dynamic_graph *dg, stack<int> &bucket1, stack<int> &bucket2, int times) // 如果在h文件中实现，一定要加上inline
 {
