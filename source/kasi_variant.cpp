@@ -19,7 +19,6 @@ using namespace std;
 // 高质量匹配启发式
 void KS2basic(graph *og, rec_graph *rg)
 {
-
     int NSIZE = og->n; // 一侧顶点的数量
     int u, w, ufu, ufw, uf1, uf2;
     stack<int> bucket1;
@@ -184,7 +183,7 @@ void KS2basic(graph *og, rec_graph *rg)
     free(mergearray);
 }
 
-#define CACHE_SIZE 5
+#define CACHE_SIZE 10
 struct cache_vertices
 {
     std::vector<std::unordered_set<int>> high_degree_vertices_cache;

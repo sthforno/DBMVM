@@ -26,8 +26,11 @@ dgmvm.o: source/dgmvm.cpp include/dgmvm.h
 dbmvm.o: source/dbmvm.cpp include/dgmvm.h   
 	$(CC) $(CFLAGS) -c -o dbmvm.o source/dbmvm.cpp
 
-main: main.o mmio.o kasi.o dgmvm.o dbmvm.o pf.o
-	$(CC) $(CFLAGS) $(LDFLAGS)  -o main main.o graphgenBP.o mmio.o kasi.o dgmvm.o dbmvm.o pf.o -lm -lstdc++
+kuhn_munkres.o: source/kuhn_munkres.cpp include/kasi.h 
+	$(CC) $(CFLAGS) -c -o kuhn_munkres.o source/kuhn_munkres.cpp
+
+main: main.o mmio.o kasi.o dgmvm.o dbmvm.o pf.o kuhn_munkres.o 
+	$(CC) $(CFLAGS) $(LDFLAGS)  -o main main.o graphgenBP.o mmio.o kasi.o dgmvm.o dbmvm.o pf.o  kuhn_munkres.o -lm -lstdc++
 
 
 

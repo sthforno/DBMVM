@@ -37,9 +37,38 @@ struct match_tree
     int *tree_vtx_ptr_end;
     int *tree_edge;
 };
+
+struct connected_component
+{
+    int compo_count;
+    int *compo_size;     // 每一个连通分量的大小
+    int *compo_first_id; // 记录每一个连接组件的起始位置
+
+    // 记录连接组件
+    int *compo_ptr_start;
+    int *compo_ptr_end;
+    int *compo_id;
+};
+
+struct bucket_info
+{
+    int *bucket1;
+    int *bucket2;
+    int *bucket3;
+    int *bucket4;
+
+    int bucket1_end;
+    int bucket2_end;
+    int bucket3_end;
+    int bucket4_end;
+};
+
 void DGMVM(graph *og, dynamic_graph *dg, match_tree *mt, int times);
 void DBMVM(graph *og, dynamic_graph *dg, match_tree *mt, int times);
 void MVM_raw(graph *og, dynamic_graph *dg, match_tree *mt, int times);
+
+void test_kuhn_munkres(graph *og);
+
 void printMemoryUsage();
 inline void init_dynamic_graph(graph *og, dynamic_graph *dg, stack<int> &bucket1, stack<int> &bucket2, int times) // 如果在h文件中实现，一定要加上inline
 {

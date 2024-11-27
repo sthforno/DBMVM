@@ -149,7 +149,7 @@ void printheapmemory()
             size_t memory;
             iss >> memory;
             ofstream of;
-            of.open("memory_comsum.txt", ios::app);
+            of.open("memory_comsum_kuhn_mukres.txt", ios::app);
             of << line.substr(0, 6) << memory << " KB" << endl;
             of.close();
             std::cout << line.substr(0, 6) << memory << " KB" << std::endl;
@@ -160,7 +160,7 @@ void printheapmemory()
             size_t memory;
             iss >> memory;
             ofstream of;
-            of.open("memory_comsum.txt", ios::app);
+            of.open("memory_comsum_kuhn_mukres.txt", ios::app);
             of << line.substr(0, 6) << memory << " KB" << endl;
             of.close();
             std::cout << line.substr(0, 6) << memory << " KB" << std::endl;
@@ -226,7 +226,7 @@ void extract_lines_to_file()
 int main(int argc, char **argv)
 {
     // ceshi();
-    extract_lines_to_file();
+    // extract_lines_to_file();
     if (argc != 3)
     {
         printf("Usage: ./main fileName numThreads\n");
@@ -261,6 +261,7 @@ int main(int argc, char **argv)
     fclose(fp);
 
     graph *og = (graph *)malloc(sizeof(graph));
+    graph *og_cg = (graph *)malloc(sizeof(graph));
     graph *og_dg = (graph *)malloc(sizeof(graph));
     graph *og_bg = (graph *)malloc(sizeof(graph));
     graph *og_tg = (graph *)malloc(sizeof(graph));
@@ -299,15 +300,15 @@ int main(int argc, char **argv)
     shuffle_graph(og);
 
     // #ifdef TEST
-
-    init_graph(og, og_bg);
+    // init_graph(og, og_cg);
+    // init_graph(og, og_bg);
     // init_graph(og, og_dg);
     // init_graph(og, og_tg);
     // init_graph(og, og_hg);
     // free_graph(og);
-    // ofstream of;
-    // of.open("memory_comsum.txt", ios ::app);
-    // of << "Begin testing matrix" << inFile << endl;
+    ofstream of;
+    of.open("RUNTIME_worstcase.txt", ios ::app);
+    of << "Begin testing matrix" << inFile << endl;
     // of.close();
     //==================================================================================================================================================//
     //================ Test kernelization algorithms ===================================================================================================//
@@ -323,7 +324,7 @@ int main(int argc, char **argv)
     // std::chrono::duration<double> elapsed_seconds_origin = end_origin - start_origin;
     // std::cout << "PF time: " << elapsed_seconds_origin.count() << "s\n";
 
-    // // 原始kasi
+    // 原始kasi
     // printheapmemory();
     // auto start_kasi = std::chrono::system_clock::now();
     // // of << og->n << "    " << og->m << endl;
@@ -335,9 +336,37 @@ int main(int argc, char **argv)
     // // recover_the_matching(og, &rg, mate);
     // auto end_kasi = std::chrono::system_clock::now();
     // std::chrono::duration<double> elapsed_seconds_kasi = end_kasi - start_kasi;
-    // free_rec_graph(&rg, og->n);
-    // free_graph(og);
+    // // free_rec_graph(&rg, og->n);
     // std::cout << "KASI time: " << elapsed_seconds_kasi.count() << "s\n";
+    // of << elapsed_seconds_kasi.count() << endl;
+
+    // //cache kasi
+    // printheapmemory();
+    // auto start_cache_kasi = std::chrono::system_clock::now();
+    // // of << og->n << "    " << og->m << endl;
+    // rec_graph cache_rg;
+    // // KS2basic(og, &rg);
+    // Cache_KaSi(og, &cache_rg);
+    // // reduce_the_graph(og, &rg);
+    // // of << og->n << "    " << og->m << endl;
+    // // long *mate = Pothen_Fan_Fairnes(og, mateI);
+    // // recover_the_matching(og, &rg, mate);
+    // auto end_cache_kasi = std::chrono::system_clock::now();
+    // std::chrono::duration<double> elapsed_seconds_cache_kasi = end_cache_kasi - start_cache_kasi;
+    // free_rec_graph(&cache_rg, og->n);
+    // std::cout << "Cache_KASI time: " << elapsed_seconds_cache_kasi.count() << "s\n";
+    // of << elapsed_seconds_cache_kasi.count() << endl;
+    // of.close();
+
+    // 测试带权匹配
+
+    // auto start_km = std::chrono::system_clock::now();
+    // test_kuhn_munkres(og);
+    // auto end_km = std::chrono::system_clock::now();
+    // std::chrono::duration<double> elapsed_seconds_km = end_km - start_km;
+    // std::cout << "KM time: " << elapsed_seconds_km.count() << "s\n";
+    // of << elapsed_seconds_km.count() << endl;
+    // of.close();
 
     // 使用GMVM作为启发时
 
@@ -348,35 +377,36 @@ int main(int argc, char **argv)
     // match_tree mt;
     // DGMVM(og_dg, &dg, &mt, 1);
     // auto end_dgmvm = std::chrono::system_clock::now();
-    // // reduce_the_dynamic_graph(og_dg, &dg, &mt);
-    // // auto end_dgmvm1 = std::chrono::system_clock::now();
-    // // long *mate1 = Pothen_Fan_Fairnes(og_dg, mateI);
-    // // auto end_dgmvm2 = std::chrono::system_clock::now();
-    // // recover_matching_from_match_tree(og_dg, &dg, &mt, mate1);
-    // // auto end_dgmvm3 = std::chrono::system_clock::now();
+    // reduce_the_dynamic_graph(og_dg, &dg, &mt);
+    // auto end_dgmvm1 = std::chrono::system_clock::now();
+    // long *mate1 = Pothen_Fan_Fairnes(og_dg, mateI);
+    // auto end_dgmvm2 = std::chrono::system_clock::now();
+    // recover_matching_from_match_tree(og_dg, &dg, &mt, mate1);
+    // auto end_dgmvm3 = std::chrono::system_clock::now();
     // std::chrono::duration<double> elapsed_seconds_dgmvm = end_dgmvm - start_dgmvm;
-    // // std::chrono::duration<double> elapsed_seconds_dgmvm1 = end_dgmvm1 - end_dgmvm;
-    // // std::chrono::duration<double> elapsed_seconds_dgmvm2 = end_dgmvm2 - end_dgmvm1;
-    // // std::chrono::duration<double> elapsed_seconds_dgmvm3 = end_dgmvm3 - end_dgmvm2;
+    // std::chrono::duration<double> elapsed_seconds_dgmvm1 = end_dgmvm1 - end_dgmvm;
+    // std::chrono::duration<double> elapsed_seconds_dgmvm2 = end_dgmvm2 - end_dgmvm1;
+    // std::chrono::duration<double> elapsed_seconds_dgmvm3 = end_dgmvm3 - start_dgmvm;
     // free_dynamic_graph(&dg); // DGMVM
-    // free_match_tree(&mt);
-    // free_graph(og_dg);
-    // std::cout << "DGMVM time: " << elapsed_seconds_dgmvm.count() << "s\n";
-    //==================================================================================================================================================//
+    // // free_match_tree(&mt);
+    // // free_graph(og_dg);
+    // std::cout << "DGMVM time: " << elapsed_seconds_dgmvm3.count() << "s\n";
+    // //==================================================================================================================================================//
     //============================四种间隙的DBMVM算法====================================================================================================//
     //==================================================================================================================================================//
-    // memset(mateI, -1, sizeof(long) * NV);theapmemory();
+    // memset(mateI, -1, sizeof(long) * NV);
     // printheapmemory();
-    auto start_dbmvm1 = std::chrono::system_clock::now();
-    dynamic_graph db_g1;
-    match_tree db_mt1;
-    DBMVM(og_bg, &db_g1, &db_mt1, 1);
-    auto end_dbmvm1 = std::chrono::system_clock::now();
-    std::chrono::duration<double> elapsed_seconds_dbmvm1 = end_dbmvm1 - start_dbmvm1;
-    free_dynamic_graph(&db_g1); // DBMVM
-    free_match_tree(&db_mt1);
-    free_graph(og_bg);
-    std::cout << "DBMVM time: " << elapsed_seconds_dbmvm1.count() << "s\n";
+    // auto start_dbmvm1 = std::chrono::system_clock::now();
+    // dynamic_graph db_g1;
+    // match_tree db_mt1;
+    // DBMVM(og_bg, &db_g1, &db_mt1, 1);
+    // auto end_dbmvm1 = std::chrono::system_clock::now();
+    // std::chrono::duration<double> elapsed_seconds_dbmvm1 = end_dbmvm1 - start_dbmvm1;
+    // free_dynamic_graph(&db_g1); // DBMVM
+    // free_match_tree(&db_mt1);
+    // free_graph(og_bg);
+    // std::cout << "DBMVM time: " << elapsed_seconds_dbmvm1.count() << "s\n";
+    // of << elapsed_seconds_dbmvm1.count() << endl;
 
     // auto start_dbmvm2 = std::chrono::system_clock::now();
     // dynamic_graph db_g2;
@@ -394,12 +424,17 @@ int main(int argc, char **argv)
     // std::chrono::duration<double> elapsed_seconds_dbmvm4 = end_dbmvm4 - start_dbmvm4;
     // std::cout << "DBMVM4 time: " << elapsed_seconds_dbmvm4.count() << "s\n";
 
+    // init_graph(og, og_bg);
     // auto start_dbmvm8 = std::chrono::system_clock::now();
     // dynamic_graph db_g8;
     // match_tree db_mt8;
-    // DBMVM(og_bg, &db_g8, &db_mt8, 8);
+    // DBMVM(og_bg, &db_g8, &db_mt8, 1);
     // auto end_dbmvm8 = std::chrono::system_clock::now();
+    // free_dynamic_graph(&db_g8);
+    // free_match_tree(&db_mt8);
+    // free_graph(og_bg);
     // std::chrono::duration<double> elapsed_seconds_dbmvm8 = end_dbmvm8 - start_dbmvm8;
+    // of << elapsed_seconds_dbmvm8.count() << endl;
     // std::cout << "DBMVM8 time: " << elapsed_seconds_dbmvm8.count() << "s\n";
 
     // // BMVM
@@ -421,16 +456,33 @@ int main(int argc, char **argv)
     // auto end_comp_kasi = std::chrono::system_clock::now();
     // std::chrono::duration<double> elapsed_seconds_comp_kasi = end_comp_kasi - start_comp_kasi;
     // std::cout << "Comp_Kasi time: " << elapsed_seconds_comp_kasi.count() << "s\n";
-
+    // init_graph(og, og_dg);
     // auto start_dgmvm = std::chrono::system_clock::now();
     // dynamic_graph dg;
     // match_tree mt;
     // DGMVM(og_dg, &dg, &mt, 1);
     // auto end_dgmvm = std::chrono::system_clock::now();
+    // free_dynamic_graph(&dg);
+    // free_match_tree(&mt);
     // std::chrono::duration<double> elapsed_seconds_dgmvm = end_dgmvm - start_dgmvm;
+    // of << elapsed_seconds_dgmvm.count() << endl;
+    // cout << "DGMVM" << elapsed_seconds_dgmvm.count() << endl;
+
+    // auto start_dgmvm_raw = std::chrono::system_clock::now();
+    // dynamic_graph dg_raw;
+    // match_tree mt_raw;
+    // MVM_raw(og_dg, &dg_raw, &mt_raw, 1);
+    // auto end_dgmvm_raw = std::chrono::system_clock::now();
+    // free_dynamic_graph(&dg_raw);
+    // free_match_tree(&mt_raw);
+    // free_graph(og_dg);
+    // std::chrono::duration<double> elapsed_seconds_dgmvm_raw = end_dgmvm_raw - start_dgmvm_raw;
+    // of << elapsed_seconds_dgmvm_raw.count() << endl;
+    // of.close();
     // hash图
 
     // printheapmemory();
+    // init_graph(og, og_hg);
     // auto start_hash = std::chrono::system_clock::now();
     // hash_graph hg;
     // KaSi_hash(og_hg, &hg);
@@ -439,18 +491,21 @@ int main(int argc, char **argv)
     // free_rec_graph(&hg, og_hg->n); // hkasi
     // free_graph(og_hg);
     // std::cout << "hash time: " << elapsed_seconds_hash.count() << "s\n";
+    // of << elapsed_seconds_hash.count() << endl;
 
-    // // // 树图
+    // // // // 树图
 
-    // printheapmemory();
-    // auto start_tree = std::chrono::system_clock::now();
-    // tree_graph tg;
-    // KaSi_tree(og_tg, &tg);
-    // auto end_tree = std::chrono::system_clock::now();
-    // std::chrono::duration<double> elapsed_seconds_tree = end_tree - start_tree;
-    // free_rec_graph(&tg, og_tg->n); // TKasi
-    // free_graph(og_tg);
-    // std::cout << "tree time: " << elapsed_seconds_tree.count() << "s\n";
+    // // printheapmemory();
+    init_graph(og, og_tg);
+    auto start_tree = std::chrono::system_clock::now();
+    tree_graph tg;
+    KaSi_tree(og_tg, &tg);
+    auto end_tree = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds_tree = end_tree - start_tree;
+    free_rec_graph(&tg, og_tg->n); // TKasi
+    free_graph(og_tg);
+    std::cout << "tree time: " << elapsed_seconds_tree.count() << "s\n";
+    of << elapsed_seconds_tree.count() << endl;
 
     // of << elapsed_seconds_kasi.count() << "    " << elapsed_seconds_comp_kasi.count() << "    " << elapsed_seconds_dgmvm.count() << "    " << elapsed_seconds_dbmvm1.count() << "    " << elapsed_seconds_hash.count() << "    " << elapsed_seconds_tree.count() << "    " << endl;
     // of << elapsed_seconds_dgmvm.count() << "    " << elapsed_seconds_dbmvm1.count() << endl;
