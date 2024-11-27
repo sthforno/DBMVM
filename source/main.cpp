@@ -301,13 +301,13 @@ int main(int argc, char **argv)
 
     // #ifdef TEST
     // init_graph(og, og_cg);
-    // init_graph(og, og_bg);
+    init_graph(og, og_bg);
     // init_graph(og, og_dg);
     // init_graph(og, og_tg);
     // init_graph(og, og_hg);
     // free_graph(og);
     ofstream of;
-    of.open("RUNTIME_worstcase.txt", ios ::app);
+    of.open("RUNTIME.txt", ios ::app);
     of << "Begin testing matrix" << inFile << endl;
     // of.close();
     //==================================================================================================================================================//
@@ -396,17 +396,17 @@ int main(int argc, char **argv)
     //==================================================================================================================================================//
     // memset(mateI, -1, sizeof(long) * NV);
     // printheapmemory();
-    // auto start_dbmvm1 = std::chrono::system_clock::now();
-    // dynamic_graph db_g1;
-    // match_tree db_mt1;
-    // DBMVM(og_bg, &db_g1, &db_mt1, 1);
-    // auto end_dbmvm1 = std::chrono::system_clock::now();
-    // std::chrono::duration<double> elapsed_seconds_dbmvm1 = end_dbmvm1 - start_dbmvm1;
-    // free_dynamic_graph(&db_g1); // DBMVM
-    // free_match_tree(&db_mt1);
-    // free_graph(og_bg);
-    // std::cout << "DBMVM time: " << elapsed_seconds_dbmvm1.count() << "s\n";
-    // of << elapsed_seconds_dbmvm1.count() << endl;
+    auto start_dbmvm1 = std::chrono::system_clock::now();
+    dynamic_graph db_g1;
+    match_tree db_mt1;
+    DBMVM(og_bg, &db_g1, &db_mt1, 1);
+    auto end_dbmvm1 = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds_dbmvm1 = end_dbmvm1 - start_dbmvm1;
+    free_dynamic_graph(&db_g1); // DBMVM
+    free_match_tree(&db_mt1);
+    free_graph(og_bg);
+    std::cout << "DBMVM time: " << elapsed_seconds_dbmvm1.count() << "s\n";
+    of << elapsed_seconds_dbmvm1.count() << endl;
 
     // auto start_dbmvm2 = std::chrono::system_clock::now();
     // dynamic_graph db_g2;
@@ -496,16 +496,16 @@ int main(int argc, char **argv)
     // // // // 树图
 
     // // printheapmemory();
-    init_graph(og, og_tg);
-    auto start_tree = std::chrono::system_clock::now();
-    tree_graph tg;
-    KaSi_tree(og_tg, &tg);
-    auto end_tree = std::chrono::system_clock::now();
-    std::chrono::duration<double> elapsed_seconds_tree = end_tree - start_tree;
-    free_rec_graph(&tg, og_tg->n); // TKasi
-    free_graph(og_tg);
-    std::cout << "tree time: " << elapsed_seconds_tree.count() << "s\n";
-    of << elapsed_seconds_tree.count() << endl;
+    // init_graph(og, og_tg);
+    // auto start_tree = std::chrono::system_clock::now();
+    // tree_graph tg;
+    // KaSi_tree(og_tg, &tg);
+    // auto end_tree = std::chrono::system_clock::now();
+    // std::chrono::duration<double> elapsed_seconds_tree = end_tree - start_tree;
+    // free_rec_graph(&tg, og_tg->n); // TKasi
+    // free_graph(og_tg);
+    // std::cout << "tree time: " << elapsed_seconds_tree.count() << "s\n";
+    // of << elapsed_seconds_tree.count() << endl;
 
     // of << elapsed_seconds_kasi.count() << "    " << elapsed_seconds_comp_kasi.count() << "    " << elapsed_seconds_dgmvm.count() << "    " << elapsed_seconds_dbmvm1.count() << "    " << elapsed_seconds_hash.count() << "    " << elapsed_seconds_tree.count() << "    " << endl;
     // of << elapsed_seconds_dgmvm.count() << "    " << elapsed_seconds_dbmvm1.count() << endl;
