@@ -1,4 +1,4 @@
-## DBMVM
+## MVM
 kernelization algorithm for bipartite graph matching.
 
 The algorithms we designed are included in dgmvm.cpp, dbmvm.cpp and dgmvm.h. The variants of the kasi algorithm are included in kasi_variant.cpp. OpenMP is used for fast file reading.
@@ -11,6 +11,7 @@ make
 
 ### Download the real-life dateset
 https://sparse.tamu.edu/
+The real-life matrices we used is contained in the ARGS folder.
 
 ### Construct the synthetic graph in the following format:
 ```
